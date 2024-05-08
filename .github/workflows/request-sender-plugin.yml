@@ -1,0 +1,59 @@
+name: request-sender-plugin
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  main:
+    name: Test and Tag
+    runs-on: ubuntu-latest
+    env:
+      GO_VERSION: 1.19
+      YAEGI_VERSION: v0.16.1
+    defaults:
+      run:
+        working-directory: go/src/github.com/${{ github.repository }}
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+        with:
+          path: go/src/github.com/${{ github.repository }}
+          fetch-depth: 0
+        
+      - name: Set version env variable
+        run: |
+          echo PLUGIN_VERSION=$(cat .version) >> $GITHUB_ENV
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Set up Go ${{ env.GO_VERSION }}
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Install Yaegi ${{ env.YAEGI_VERSION }}
+        run: curl -sfL https://raw.githubusercontent.com/traefik/yaegi/master/install.sh | bash -s -- -b $(go env GOPATH)/bin ${YAEGI_VERSION}
+
+      - name: Setup GOPATH
+        run: go env -w GOPATH=${{ github.workspace }}/go
+
+      - name: Run tests with Yaegi
+        run: make yaegi_test
+        working-directory: go/src/github.com/${{ github.repository }}
+        env:
+          GOPATH: ${{ github.workspace }}/go
+      
+      - name: Tag commit
+        run: |
+          git tag -a ${{ env.PLUGIN_VERSION }} -m "Release ${{ env.PLUGIN_VERSION }}"
+          git push origin ${{ env.PLUGIN_VERSION }} --tags
+        env:
+          PLUGIN_VERSION: ${{ env.PLUGIN_VERSION }}
+      
+        

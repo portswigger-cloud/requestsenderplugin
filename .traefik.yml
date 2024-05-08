@@ -1,0 +1,9 @@
+displayName: Request Sender Plugin
+type: middleware
+
+import: github.com/portswigger-cloud/requestsenderplugin
+
+summary: 'Sends POST request to a configuable URL with the hostname as the body'
+
+testData:
+  postUrl: "http://localhost:8080"
