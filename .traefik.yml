@@ -7,3 +7,5 @@ summary: 'Sends POST request to a configuable URL with the hostname as the body'
 
 testData:
   postUrl: "http://localhost:8080"
+  denylistedPaths: 
+  - "^/ignore/this/path/.*"
